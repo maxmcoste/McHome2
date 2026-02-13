@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mchome2
+      POSTGRES_USER: mchome2
+      POSTGRES_PASSWORD: mchome2
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mchome2"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      MCHOME2_DATABASE_URL: postgresql+asyncpg://mchome2:mchome2@db:5432/mchome2
+      MCHOME2_SETTINGS_FILE: /app/data/settings.json
+    volumes:
+      - appdata:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  appdata:

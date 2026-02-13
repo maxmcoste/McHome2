@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Built frontend (rebuilt from source)
+src/mchome2/static/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
