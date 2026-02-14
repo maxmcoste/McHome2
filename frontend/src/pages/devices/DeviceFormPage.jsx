@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { Form, Button, Alert } from 'react-bootstrap'
 import { createDevice, updateDevice } from '../../api/devices'
 import { listRooms } from '../../api/rooms'
 import { getHouse } from '../../api/houses'
+import { listZones } from '../../api/tado'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import Breadcrumbs from '../../components/Breadcrumbs'
 import { api } from '../../api/client'
 
 const DEVICE_TYPES = ['temperature_sensor', 'window_sensor', 'boiler']
+const DRIVER_OPTIONS = ['simulator', 'tado']
 
 export default function DeviceFormPage() {
   const { id: houseId, deviceId } = useParams()
@@ -23,6 +25,8 @@ export default function DeviceFormPage() {
     config_json: '{}',
   })
   const [rooms, setRooms] = useState([])
+  const [tadoZones, setTadoZones] = useState([])
+  const [tadoError, setTadoError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -65,8 +69,33 @@ export default function DeviceFormPage() {
     init()
   }, [houseId, deviceId, isEdit])
 
+  const loadTadoZones = async () => {
+    setTadoError(null)
+    try {
+      const zones = await listZones()
+      setTadoZones(zones)
+    } catch (e) {
+      setTadoError(e.message)
+      setTadoZones([])
+    }
+  }
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setForm({ ...form, [name]: value })
+    if (name === 'driver_name' && value === 'tado') {
+      loadTadoZones()
+    }
+  }
+
+  const handleZoneChange = (e) => {
+    const zoneId = parseInt(e.target.value)
+    const zone = tadoZones.find((z) => z.id === zoneId)
+    setForm({
+      ...form,
+      config_json: JSON.stringify({ zone_id: zoneId }),
+      name: form.name || (zone ? zone.name : ''),
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -146,7 +175,9 @@ export default function DeviceFormPage() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Driver</Form.Label>
-              <Form.Control name="driver_name" value={form.driver_name} onChange={handleChange} required />
+              <Form.Select name="driver_name" value={form.driver_name} onChange={handleChange}>
+                {DRIVER_OPTIONS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Room (optional for boiler)</Form.Label>
@@ -158,16 +189,41 @@ export default function DeviceFormPage() {
           </>
         )}
 
-        <Form.Group className="mb-3">
-          <Form.Label>Config JSON</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            name="config_json"
-            value={form.config_json}
-            onChange={handleChange}
-          />
-        </Form.Group>
+        {form.driver_name === 'tado' ? (
+          <Form.Group className="mb-3">
+            <Form.Label>Tado Zone</Form.Label>
+            {tadoError ? (
+              <Alert variant="warning">
+                Could not load Tado zones: {tadoError}.{' '}
+                <Link to="/settings/tado">Set up Tado</Link> first.
+              </Alert>
+            ) : tadoZones.length === 0 ? (
+              <div>
+                <Button variant="outline-secondary" size="sm" onClick={loadTadoZones}>
+                  Load Zones
+                </Button>
+              </div>
+            ) : (
+              <Form.Select onChange={handleZoneChange} defaultValue="">
+                <option value="" disabled>-- Select a zone --</option>
+                {tadoZones.map((z) => (
+                  <option key={z.id} value={z.id}>{z.name} ({z.type})</option>
+                ))}
+              </Form.Select>
+            )}
+          </Form.Group>
+        ) : (
+          <Form.Group className="mb-3">
+            <Form.Label>Config JSON</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="config_json"
+              value={form.config_json}
+              onChange={handleChange}
+            />
+          </Form.Group>
+        )}
 
         <Button type="submit" disabled={saving} className="me-2">
           {saving ? 'Saving...' : (isEdit ? 'Update' : 'Create')}

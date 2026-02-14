@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     prediction_horizon_minutes: int = 240
     reading_retention_days: int = 90
     default_boiler_power_watts: float = 15000.0
+    tado_refresh_token: str | None = None
 
     model_config = {"env_prefix": "MCHOME2_"}
 

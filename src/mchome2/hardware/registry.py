@@ -32,4 +32,13 @@ def _register_simulators() -> None:
     registry.register_driver("boiler", "simulator", SimulatedBoilerController)
 
 
+def _register_tado() -> None:
+    from mchome2.hardware.tado.temperature import TadoTemperatureSensor
+    from mchome2.hardware.tado.boiler import TadoBoilerController
+
+    registry.register_driver("temperature_sensor", "tado", TadoTemperatureSensor)
+    registry.register_driver("boiler", "tado", TadoBoilerController)
+
+
 _register_simulators()
+_register_tado()

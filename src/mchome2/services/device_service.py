@@ -62,6 +62,10 @@ async def get_active_devices(
 
 
 def instantiate_driver(device: Device) -> Any:
+    from mchome2.config import settings
+
     config = device.config_json or {}
     config.setdefault("device_id", str(device.id))
+    if device.driver_name == "tado" and settings.tado_refresh_token:
+        config.setdefault("refresh_token", settings.tado_refresh_token)
     return registry.create_device(device.device_type.value, device.driver_name, config)

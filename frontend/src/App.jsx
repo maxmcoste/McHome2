@@ -13,6 +13,7 @@ import DeviceFormPage from './pages/devices/DeviceFormPage'
 import ScheduleListPage from './pages/schedules/ScheduleListPage'
 import ScheduleFormPage from './pages/schedules/ScheduleFormPage'
 import SettingsPage from './pages/settings/SettingsPage'
+import TadoSetupPage from './pages/settings/TadoSetupPage'
 
 function AppRoutes() {
   const { setupComplete, checking } = useSetup()
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/houses/:id/devices/new" element={<DeviceFormPage />} />
         <Route path="/devices/:deviceId/edit" element={<DeviceFormPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/settings/tado" element={<TadoSetupPage />} />
         <Route path="/setup" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

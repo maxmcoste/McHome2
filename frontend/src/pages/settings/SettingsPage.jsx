@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Form, Button, Alert } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
+import { Form, Button, Alert, Card } from 'react-bootstrap'
 import { getSettings, updateSettings } from '../../api/settings'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorAlert from '../../components/ErrorAlert'
@@ -85,6 +86,16 @@ export default function SettingsPage() {
           {saving ? 'Saving...' : 'Save Settings'}
         </Button>
       </Form>
+
+      <Card className="mt-4">
+        <Card.Body>
+          <Card.Title>Integrations</Card.Title>
+          <p>
+            <Link to="/settings/tado">Tado Setup</Link>
+            {' '}&mdash; {form.tado_refresh_token ? 'Connected' : 'Not connected'}
+          </p>
+        </Card.Body>
+      </Card>
     </div>
   )
 }

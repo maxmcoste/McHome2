@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from mchome2.config import settings
 from mchome2.api import houses, rooms, devices, readings, predictions
-from mchome2.api import setup, settings as settings_api, dashboard
+from mchome2.api import setup, settings as settings_api, dashboard, tado_auth
 from mchome2.scheduler.tasks import poll_sensors, run_predictions, cleanup_old_readings
 
 logger = logging.getLogger(__name__)
@@ -42,6 +42,7 @@ def create_app() -> FastAPI:
     app.include_router(devices.router)
     app.include_router(readings.router)
     app.include_router(predictions.router)
+    app.include_router(tado_auth.router)
 
     # SPA static files (only if built frontend exists)
     assets_dir = STATIC_DIR / "assets"
