@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Form, Button, Alert } from 'react-bootstrap'
 import { createHouse, getHouse, updateHouse } from '../../api/houses'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import Breadcrumbs from '../../components/Breadcrumbs'
 
 export default function HouseFormPage() {
   const { id } = useParams()
@@ -66,8 +67,20 @@ export default function HouseFormPage() {
 
   if (loading) return <LoadingSpinner />
 
+  const crumbs = isEdit
+    ? [
+        { label: 'Houses', to: '/houses' },
+        { label: form.name || 'House', to: `/houses/${id}` },
+        { label: 'Edit' },
+      ]
+    : [
+        { label: 'Houses', to: '/houses' },
+        { label: 'New House' },
+      ]
+
   return (
     <div style={{ maxWidth: 600 }}>
+      <Breadcrumbs items={crumbs} />
       <h2>{isEdit ? 'Edit House' : 'New House'}</h2>
       {error && <Alert variant="danger">{error}</Alert>}
 

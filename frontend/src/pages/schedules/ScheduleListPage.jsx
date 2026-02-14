@@ -3,9 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import { Table, Button } from 'react-bootstrap'
 import { useApi } from '../../hooks/useApi'
 import { listSchedules, deleteSchedule } from '../../api/schedules'
+import { getHouse } from '../../api/houses'
+import { getRoom } from '../../api/rooms'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorAlert from '../../components/ErrorAlert'
 import ConfirmModal from '../../components/ConfirmModal'
+import Breadcrumbs from '../../components/Breadcrumbs'
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const WORKDAYS = [0, 1, 2, 3, 4]
@@ -23,6 +26,8 @@ function formatDays(days) {
 export default function ScheduleListPage() {
   const { id: houseId, roomId } = useParams()
   const { data, loading, error, refetch } = useApi(() => listSchedules(houseId, roomId), [houseId, roomId])
+  const { data: house } = useApi(() => getHouse(houseId), [houseId])
+  const { data: room } = useApi(() => getRoom(houseId, roomId), [houseId, roomId])
   const [deleting, setDeleting] = useState(null)
 
   const handleDelete = async () => {
@@ -40,6 +45,12 @@ export default function ScheduleListPage() {
 
   return (
     <div>
+      <Breadcrumbs items={[
+        { label: 'Houses', to: '/houses' },
+        { label: house?.name || 'House', to: `/houses/${houseId}` },
+        { label: room?.name || 'Room' },
+        { label: 'Schedules' },
+      ]} />
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>Schedules</h2>
         <div>

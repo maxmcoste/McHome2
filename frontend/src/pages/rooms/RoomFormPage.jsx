@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Form, Button, Alert } from 'react-bootstrap'
 import { createRoom, getRoom, updateRoom } from '../../api/rooms'
+import { getHouse } from '../../api/houses'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import Breadcrumbs from '../../components/Breadcrumbs'
 
 const ORIENTATIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
 
@@ -18,26 +20,33 @@ export default function RoomFormPage() {
     orientation: 'S',
     window_area_m2: '2',
   })
-  const [loading, setLoading] = useState(isEdit)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [houseName, setHouseName] = useState('')
 
   useEffect(() => {
-    if (isEdit) {
-      getRoom(houseId, roomId).then((r) => {
-        setForm({
-          name: r.name,
-          volume_m3: String(r.volume_m3),
-          insulation_factor: String(r.insulation_factor),
-          orientation: r.orientation,
-          window_area_m2: String(r.window_area_m2),
-        })
-        setLoading(false)
-      }).catch((e) => {
+    const init = async () => {
+      try {
+        const house = await getHouse(houseId)
+        setHouseName(house.name)
+        if (isEdit) {
+          const r = await getRoom(houseId, roomId)
+          setForm({
+            name: r.name,
+            volume_m3: String(r.volume_m3),
+            insulation_factor: String(r.insulation_factor),
+            orientation: r.orientation,
+            window_area_m2: String(r.window_area_m2),
+          })
+        }
+      } catch (e) {
         setError(e.message)
+      } finally {
         setLoading(false)
-      })
+      }
     }
+    init()
   }, [houseId, roomId, isEdit])
 
   const handleChange = (e) => {
@@ -71,8 +80,22 @@ export default function RoomFormPage() {
 
   if (loading) return <LoadingSpinner />
 
+  const crumbs = isEdit
+    ? [
+        { label: 'Houses', to: '/houses' },
+        { label: houseName || 'House', to: `/houses/${houseId}` },
+        { label: form.name || 'Room' },
+        { label: 'Edit' },
+      ]
+    : [
+        { label: 'Houses', to: '/houses' },
+        { label: houseName || 'House', to: `/houses/${houseId}` },
+        { label: 'New Room' },
+      ]
+
   return (
     <div style={{ maxWidth: 600 }}>
+      <Breadcrumbs items={crumbs} />
       <h2>{isEdit ? 'Edit Room' : 'New Room'}</h2>
       {error && <Alert variant="danger">{error}</Alert>}
 

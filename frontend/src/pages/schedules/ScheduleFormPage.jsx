@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Form, Button, Alert, ButtonGroup } from 'react-bootstrap'
 import { createSchedule } from '../../api/schedules'
+import { getHouse } from '../../api/houses'
+import { getRoom } from '../../api/rooms'
+import Breadcrumbs from '../../components/Breadcrumbs'
 
 const DAYS = [
   { value: 0, label: 'Mon' },
@@ -28,6 +31,15 @@ export default function ScheduleFormPage() {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [houseName, setHouseName] = useState('')
+  const [roomName, setRoomName] = useState('')
+
+  useEffect(() => {
+    Promise.all([getHouse(houseId), getRoom(houseId, roomId)]).then(([h, r]) => {
+      setHouseName(h.name)
+      setRoomName(r.name)
+    }).catch(() => {})
+  }, [houseId, roomId])
 
   const toggleDay = (day) => {
     setSelectedDays((prev) =>
@@ -68,6 +80,13 @@ export default function ScheduleFormPage() {
 
   return (
     <div style={{ maxWidth: 600 }}>
+      <Breadcrumbs items={[
+        { label: 'Houses', to: '/houses' },
+        { label: houseName || 'House', to: `/houses/${houseId}` },
+        { label: roomName || 'Room' },
+        { label: 'Schedules', to: `/houses/${houseId}/rooms/${roomId}/schedules` },
+        { label: 'New' },
+      ]} />
       <h2>New Schedule</h2>
       {error && <Alert variant="danger">{error}</Alert>}
 
@@ -77,24 +96,28 @@ export default function ScheduleFormPage() {
           <div className="mb-2">
             <ButtonGroup size="sm" className="me-2">
               <Button
+                type="button"
                 variant={selectedDays.length === 0 ? 'primary' : 'outline-primary'}
                 onClick={() => setSelectedDays([])}
               >
                 Every day
               </Button>
               <Button
+                type="button"
                 variant={isWorkdays ? 'primary' : 'outline-primary'}
                 onClick={() => setPreset(WORKDAYS)}
               >
                 Workdays
               </Button>
               <Button
+                type="button"
                 variant={isWeekends ? 'primary' : 'outline-primary'}
                 onClick={() => setPreset(WEEKENDS)}
               >
                 Weekends
               </Button>
               <Button
+                type="button"
                 variant={isAllSelected ? 'primary' : 'outline-primary'}
                 onClick={() => setPreset([0, 1, 2, 3, 4, 5, 6])}
               >
@@ -133,7 +156,7 @@ export default function ScheduleFormPage() {
         <Button type="submit" disabled={saving} className="me-2">
           {saving ? 'Saving...' : 'Create'}
         </Button>
-        <Button variant="secondary" onClick={() => navigate(`/houses/${houseId}/rooms/${roomId}/schedules`)}>Cancel</Button>
+        <Button type="button" variant="secondary" onClick={() => navigate(`/houses/${houseId}/rooms/${roomId}/schedules`)}>Cancel</Button>
       </Form>
     </div>
   )

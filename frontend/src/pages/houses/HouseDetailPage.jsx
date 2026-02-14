@@ -8,6 +8,7 @@ import { listDevices, deleteDevice } from '../../api/devices'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorAlert from '../../components/ErrorAlert'
 import ConfirmModal from '../../components/ConfirmModal'
+import Breadcrumbs from '../../components/Breadcrumbs'
 
 export default function HouseDetailPage() {
   const { id } = useParams()
@@ -39,6 +40,10 @@ export default function HouseDetailPage() {
 
   return (
     <div>
+      <Breadcrumbs items={[
+        { label: 'Houses', to: '/houses' },
+        { label: house.name },
+      ]} />
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>{house.name}</h2>
         <Button as={Link} to={`/houses/${id}/edit`} variant="outline-primary" size="sm">Edit House</Button>

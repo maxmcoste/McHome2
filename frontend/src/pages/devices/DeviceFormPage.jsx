@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Form, Button, Alert } from 'react-bootstrap'
 import { createDevice, updateDevice } from '../../api/devices'
 import { listRooms } from '../../api/rooms'
+import { getHouse } from '../../api/houses'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import Breadcrumbs from '../../components/Breadcrumbs'
 import { api } from '../../api/client'
 
 const DEVICE_TYPES = ['temperature_sensor', 'window_sensor', 'boiler']
@@ -25,15 +27,13 @@ export default function DeviceFormPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [editHouseId, setEditHouseId] = useState(houseId)
+  const [houseName, setHouseName] = useState('')
 
   useEffect(() => {
     const init = async () => {
       try {
         if (isEdit) {
           const device = await api.get(`/api/devices/${deviceId}`)
-          // For edit mode, we don't have houseId in the URL - use device.house_id
-          // But we need a device GET endpoint. Use the device data from update.
-          // Actually devices.py doesn't have a GET by device_id, so we work around:
           setForm({
             name: device.name || '',
             device_type: device.device_type || 'temperature_sensor',
@@ -42,11 +42,19 @@ export default function DeviceFormPage() {
             config_json: JSON.stringify(device.config_json || {}),
           })
           setEditHouseId(device.house_id)
-          const roomList = await listRooms(device.house_id)
+          const [roomList, house] = await Promise.all([
+            listRooms(device.house_id),
+            getHouse(device.house_id),
+          ])
           setRooms(roomList)
+          setHouseName(house.name)
         } else {
-          const roomList = await listRooms(houseId)
+          const [roomList, house] = await Promise.all([
+            listRooms(houseId),
+            getHouse(houseId),
+          ])
           setRooms(roomList)
+          setHouseName(house.name)
         }
       } catch (e) {
         setError(e.message)
@@ -103,8 +111,22 @@ export default function DeviceFormPage() {
 
   const backUrl = `/houses/${editHouseId || houseId}`
 
+  const effectiveHouseId = editHouseId || houseId
+  const crumbs = isEdit
+    ? [
+        { label: 'Houses', to: '/houses' },
+        { label: houseName || 'House', to: `/houses/${effectiveHouseId}` },
+        { label: 'Edit Device' },
+      ]
+    : [
+        { label: 'Houses', to: '/houses' },
+        { label: houseName || 'House', to: `/houses/${houseId}` },
+        { label: 'New Device' },
+      ]
+
   return (
     <div style={{ maxWidth: 600 }}>
+      <Breadcrumbs items={crumbs} />
       <h2>{isEdit ? 'Edit Device' : 'New Device'}</h2>
       {error && <Alert variant="danger">{error}</Alert>}
 
